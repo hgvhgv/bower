@@ -13,9 +13,21 @@
     --->    new
     ;       old.
 
+:- type inbox
+    --->    inbox
+    ;       archive.
+
 :- type unread
     --->    unread
     ;       read.
+
+:- type draft
+    --->    draft
+    ;       not_draft.
+
+:- type attachment
+    --->    attachment
+    ;       no_attachment.
 
 :- type replied
     --->    replied
@@ -25,15 +37,33 @@
     --->    deleted
     ;       not_deleted.
 
+:- type spam
+    --->    spam
+    ;       not_spam.
+
+:- type zbox
+    --->    zbox
+    ;       not_zbox.
+
+:- type todo
+    --->    todo
+    ;       not_todo.
+
 :- type flagged
     --->    flagged
     ;       unflagged.
 
 :- type standard_tags
     --->    standard_tags(
+                inbox :: inbox,
                 unread :: unread,
+                draft :: draft,
+                attachment :: attachment,
                 replied :: replied,
                 deleted :: deleted,
+                spam :: spam,
+                zbox :: zbox,
+                todo :: todo,
                 flagged :: flagged
             ).
 
@@ -87,13 +117,19 @@ display_tag(Tag) :-
 
 :- pred nondisplay_tag(tag::in) is semidet.
 
+nondisplay_tag(tag("attachment")).
 nondisplay_tag(tag("deleted")).
+nondisplay_tag(tag("draft")).
 nondisplay_tag(tag("flagged")).
+nondisplay_tag(tag("inbox")).
 nondisplay_tag(tag("new")).
 nondisplay_tag(tag("replied")).
 nondisplay_tag(tag("sent")).
+nondisplay_tag(tag("spam")).
 nondisplay_tag(tag("signed")).
+nondisplay_tag(tag("todo")).
 nondisplay_tag(tag("unread")).
+nondisplay_tag(tag("zbox")).
 nondisplay_tag(tag(String)) :-
     string.prefix(String, ".").
 
@@ -118,7 +154,8 @@ exclude_user_tag_at_compose(tag("unread")).
 %-----------------------------------------------------------------------------%
 
 get_standard_tags(Tags, StdTags, DisplayTagsWidth) :-
-    StdTags0 = standard_tags(read, not_replied, not_deleted, unflagged),
+    StdTags0 = standard_tags(archive, read, not_draft, no_attachment, not_replied,
+        not_deleted, not_spam, not_zbox, not_todo, unflagged),
     set.fold2(get_standard_tags_2, Tags, StdTags0, StdTags,
         0, DisplayTagsWidth).
 
@@ -126,12 +163,24 @@ get_standard_tags(Tags, StdTags, DisplayTagsWidth) :-
     int::in, int::out) is det.
 
 get_standard_tags_2(Tag, !StdTags, !DisplayTagsWidth) :-
-    ( Tag = tag("unread") ->
+    ( Tag = tag("inbox") ->
+        !StdTags ^ inbox := inbox
+    ; Tag = tag("unread") ->
         !StdTags ^ unread := unread
+    ; Tag = tag("draft") ->
+        !StdTags ^ draft := draft
+    ; Tag = tag("attachment") ->
+        !StdTags ^ attachment := attachment
     ; Tag = tag("replied") ->
         !StdTags ^ replied := replied
     ; Tag = tag("deleted") ->
         !StdTags ^ deleted := deleted
+    ; Tag = tag("spam") ->
+        !StdTags ^ spam := spam
+    ; Tag = tag("zbox") ->
+        !StdTags ^ zbox := zbox
+    ; Tag = tag("todo") ->
+        !StdTags ^ todo := todo
     ; Tag = tag("flagged") ->
         !StdTags ^ flagged := flagged
     ; display_tag(Tag) ->
