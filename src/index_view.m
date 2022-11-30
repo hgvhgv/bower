@@ -125,6 +125,7 @@
     ;       skip_to_internal_search(rel_search_direction)
     ;       toggle_unread
     ;       toggle_archive
+    ;       toggle_zbox
     ;       toggle_flagged
     ;       set_deleted
     ;       unset_deleted
@@ -158,6 +159,7 @@
     ;       prompt_internal_search(search_direction)
     ;       toggle_unread
     ;       toggle_archive
+    ;       toggle_zbox
     ;       toggle_flagged
     ;       set_deleted
     ;       unset_deleted
@@ -574,6 +576,10 @@ index_loop(Screen, OnEntry, MaybeUpdateActivity, !.IndexInfo, !IO) :-
         modify_tag_cursor_line(toggle_archive, Screen, !IndexInfo, !IO),
         index_loop(Screen, redraw, update_activity, !.IndexInfo, !IO)
     ;
+        Action = toggle_zbox,
+        modify_tag_cursor_line(toggle_zbox, Screen, !IndexInfo, !IO),
+        index_loop(Screen, redraw, update_activity, !.IndexInfo, !IO)
+    ;
         Action = toggle_flagged,
         modify_tag_cursor_line(toggle_flagged, Screen, !IndexInfo, !IO),
         index_loop(Screen, redraw, update_activity, !.IndexInfo, !IO)
@@ -767,6 +773,10 @@ index_view_input(NumRows, KeyCode, MessageUpdate, Action, !IndexInfo) :-
             MessageUpdate = no_change,
             Action = toggle_archive
         ;
+            Binding = toggle_zbox,
+            MessageUpdate = no_change,
+            Action = toggle_zbox
+        ;
             Binding = toggle_flagged,
             MessageUpdate = no_change,
             Action = toggle_flagged
@@ -876,6 +886,7 @@ key_binding_char('n', skip_to_internal_search(prevailing_dir)).
 key_binding_char('N', skip_to_internal_search(opposite_dir)).
 key_binding_char('U', toggle_unread).
 key_binding_char('a', toggle_archive).
+key_binding_char('Z', toggle_zbox).
 key_binding_char('F', toggle_flagged).
 key_binding_char('d', set_deleted).
 key_binding_char('u', unset_deleted).
@@ -1298,6 +1309,21 @@ toggle_archive(Line0, Line, TagDeltas) :-
         TagDeltas = [tag_delta("+inbox")]
     ),
     set_tags(TagSet, Line0, Line).
+
+:- pred toggle_zbox(index_line::in, index_line::out, list(tag_delta)::out)
+    is det.
+
+toggle_zbox(Line0, Line, [TagDelta]) :-
+    Zbox0 = Line0 ^ i_std_tags ^ zbox,
+    (
+        Zbox0 = zbox,
+        remove_tag(tag("zbox"), Line0, Line),
+        TagDelta = tag_delta("-zbox")
+    ;
+        Zbox0 = not_zbox,
+        add_tag(tag("zbox"), Line0, Line),
+        TagDelta = tag_delta("+zbox")
+    ).
 
 :- pred toggle_flagged(index_line::in, index_line::out, list(tag_delta)::out)
     is semidet.
@@ -2150,28 +2176,75 @@ draw_index_line(IAttrs, AuthorWidth, Screen, Panel, Line, _LineNr, IsCursor,
     ),
     mattr(Screen, Panel, unless(IsCursor, Attrs ^ standard_tag), !IO),
 
-    StdTags = standard_tags(Unread, Replied, Deleted, Flagged),
+    StdTags = standard_tags(Inbox, Unread, Draft, Attachment, Deleted, Spam,
+        Zbox, Todo, Flagged),
+    (
+        Inbox = inbox,
+        Base = curs.bold,
+        draw(Screen, Panel, "❄", !IO)
+    ;
+        Inbox = archive,
+        Base = curs.normal,
+        draw(Screen, Panel, " ", !IO)
+    ),
     (
         Unread = unread,
         Base = curs.bold,
-        draw(Screen, Panel, "n", !IO)
+        draw(Screen, Panel, "✉", !IO)
     ;
         Unread = read,
         Base = curs.normal,
         draw(Screen, Panel, " ", !IO)
     ),
     (
-        Replied = replied,
-        draw(Screen, Panel, "r", !IO)
+        Draft = draft,
+        Base = curs.bold,
+        draw(Screen, Panel, "✎", !IO)
     ;
-        Replied = not_replied,
+        Draft = not_draft,
+        Base = curs.normal,
         draw(Screen, Panel, " ", !IO)
     ),
     (
+        Attachment = attachment,
+        draw(Screen, Panel, "A", !IO)
+    ;
+        Attachment = no_attachment,
+        draw(Screen, Panel, " ", !IO)
+    ),
+%    (
+%        Replied = replied,
+%        draw(Screen, Panel, "r", !IO)
+%    ;
+%        Replied = not_replied,
+%        draw(Screen, Panel, " ", !IO)
+%    ),
+    (
         Deleted = deleted,
-        draw(Screen, Panel, "d", !IO)
+        draw(Screen, Panel, "✗", !IO)
     ;
         Deleted = not_deleted,
+        draw(Screen, Panel, " ", !IO)
+    ),
+    (
+        Spam = spam,
+        draw(Screen, Panel, "$", !IO)
+    ;
+        Spam = not_spam,
+        draw(Screen, Panel, " ", !IO)
+    ),
+    (
+        Zbox = zbox,
+        draw(Screen, Panel, "Z", !IO)
+    ;
+        Zbox = not_zbox,
+        draw(Screen, Panel, " ", !IO)
+    ),
+    (
+        Todo = todo,
+        draw(Screen, Panel, "+", !IO)
+    ;
+        Todo = not_todo,
         draw(Screen, Panel, " ", !IO)
     ),
     (
