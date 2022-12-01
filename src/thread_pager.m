@@ -2922,12 +2922,34 @@ draw_thread_line(TAttrs, ObscureMode, Screen, Panel, Line, _LineNr, IsCursor,
     ),
     mattr(Screen, Panel, MaybeAttr(Attrs ^ standard_tag), !IO),
 
-    StdTags = standard_tags(Unread, Replied, Deleted, Flagged),
+    StdTags = standard_tags(Inbox, Unread, Draft, Attachment, Replied, Deleted, Spam,
+        Zbox, Todo, Flagged),
+    (
+        Inbox = inbox,
+        draw(Screen, Panel, "❄", !IO)
+    ;
+        Inbox = archive,
+        draw(Screen, Panel, " ", !IO)
+    ),
     (
         Unread = unread,
-        draw(Screen, Panel, "n", !IO)
+        draw(Screen, Panel, "✉", !IO)
     ;
         Unread = read,
+        draw(Screen, Panel, " ", !IO)
+    ),
+    (
+        Draft = draft,
+        draw(Screen, Panel, "✎", !IO)
+    ;
+        Draft = not_draft,
+        draw(Screen, Panel, " ", !IO)
+    ),
+    (
+        Attachment = attachment,
+        draw(Screen, Panel, "A", !IO)
+    ;
+        Attachment = no_attachment,
         draw(Screen, Panel, " ", !IO)
     ),
     (
@@ -2939,9 +2961,30 @@ draw_thread_line(TAttrs, ObscureMode, Screen, Panel, Line, _LineNr, IsCursor,
     ),
     (
         Deleted = deleted,
-        draw(Screen, Panel, "d", !IO)
+        draw(Screen, Panel, "✗", !IO)
     ;
         Deleted = not_deleted,
+        draw(Screen, Panel, " ", !IO)
+    ),
+    (
+        Spam = spam,
+        draw(Screen, Panel, "$", !IO)
+    ;
+        Spam = not_spam,
+        draw(Screen, Panel, " ", !IO)
+    ),
+    (
+        Zbox = zbox,
+        draw(Screen, Panel, "Z", !IO)
+    ;
+        Zbox = not_zbox,
+        draw(Screen, Panel, " ", !IO)
+    ),
+    (
+        Todo = todo,
+        draw(Screen, Panel, "+", !IO)
+    ;
+        Todo = not_todo,
         draw(Screen, Panel, " ", !IO)
     ),
     (
