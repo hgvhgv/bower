@@ -29,10 +29,6 @@
     --->    attachment
     ;       no_attachment.
 
-:- type replied
-    --->    replied
-    ;       not_replied.
-
 :- type deleted
     --->    deleted
     ;       not_deleted.
@@ -59,7 +55,6 @@
                 unread :: unread,
                 draft :: draft,
                 attachment_tag :: attachment_tag,
-                replied :: replied,
                 deleted :: deleted,
                 spam :: spam,
                 zbox :: zbox,
@@ -154,7 +149,7 @@ exclude_user_tag_at_compose(tag("unread")).
 %-----------------------------------------------------------------------------%
 
 get_standard_tags(Tags, StdTags, DisplayTagsWidth) :-
-    StdTags0 = standard_tags(archive, read, not_draft, no_attachment, not_replied,
+    StdTags0 = standard_tags(archive, read, not_draft, no_attachment,
         not_deleted, not_spam, not_zbox, not_todo, unflagged),
     set.fold2(get_standard_tags_2, Tags, StdTags0, StdTags,
         0, DisplayTagsWidth).
@@ -171,8 +166,6 @@ get_standard_tags_2(Tag, !StdTags, !DisplayTagsWidth) :-
         !StdTags ^ draft := draft
     ; Tag = tag("attachment") ->
         !StdTags ^ attachment_tag := attachment
-    ; Tag = tag("replied") ->
-        !StdTags ^ replied := replied
     ; Tag = tag("deleted") ->
         !StdTags ^ deleted := deleted
     ; Tag = tag("spam") ->

@@ -2176,7 +2176,7 @@ draw_index_line(IAttrs, AuthorWidth, Screen, Panel, Line, _LineNr, IsCursor,
     ),
     mattr(Screen, Panel, unless(IsCursor, Attrs ^ standard_tag), !IO),
 
-    StdTags = standard_tags(Inbox, Unread, Draft, Attachment, Replied, Deleted, Spam,
+    StdTags = standard_tags(Inbox, Unread, Draft, Attachment, Deleted, Spam,
         Zbox, Todo, Flagged),
     (
         Inbox = inbox,
@@ -2206,13 +2206,6 @@ draw_index_line(IAttrs, AuthorWidth, Screen, Panel, Line, _LineNr, IsCursor,
         draw(Screen, Panel, "A", !IO)
     ;
         Attachment = no_attachment,
-        draw(Screen, Panel, " ", !IO)
-    ),
-    (
-        Replied = replied,
-        draw(Screen, Panel, "r", !IO)
-    ;
-        Replied = not_replied,
         draw(Screen, Panel, " ", !IO)
     ),
     (
