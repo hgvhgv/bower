@@ -2180,11 +2180,9 @@ draw_index_line(IAttrs, AuthorWidth, Screen, Panel, Line, _LineNr, IsCursor,
         Zbox, Todo, Flagged),
     (
         Inbox = inbox,
-        Base = curs.bold,
         draw(Screen, Panel, "❄", !IO)
     ;
         Inbox = archive,
-        Base = curs.normal,
         draw(Screen, Panel, " ", !IO)
     ),
     (
@@ -2198,11 +2196,9 @@ draw_index_line(IAttrs, AuthorWidth, Screen, Panel, Line, _LineNr, IsCursor,
     ),
     (
         Draft = draft,
-        Base = curs.bold,
         draw(Screen, Panel, "✎", !IO)
     ;
         Draft = not_draft,
-        Base = curs.normal,
         draw(Screen, Panel, " ", !IO)
     ),
     (
