@@ -25,7 +25,7 @@
     --->    draft
     ;       not_draft.
 
-:- type attachment
+:- type attachment_tag
     --->    attachment
     ;       no_attachment.
 
@@ -58,7 +58,7 @@
                 inbox :: inbox,
                 unread :: unread,
                 draft :: draft,
-                attachment :: attachment,
+                attachment_tag :: attachment_tag,
                 replied :: replied,
                 deleted :: deleted,
                 spam :: spam,
@@ -170,7 +170,7 @@ get_standard_tags_2(Tag, !StdTags, !DisplayTagsWidth) :-
     ; Tag = tag("draft") ->
         !StdTags ^ draft := draft
     ; Tag = tag("attachment") ->
-        !StdTags ^ attachment := attachment
+        !StdTags ^ attachment_tag := attachment
     ; Tag = tag("replied") ->
         !StdTags ^ replied := replied
     ; Tag = tag("deleted") ->
