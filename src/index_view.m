@@ -466,7 +466,7 @@ index_loop(Screen, OnEntry, MaybeUpdateActivity, !.IndexInfo, !IO) :-
         Config = !.IndexInfo ^ i_config,
         Crypto = !.IndexInfo ^ i_crypto,
         Tokens = !.IndexInfo ^ i_search_tokens,
-        index_poll_terms(Tokens, IndexPollTerms, !IO),
+        index_poll_terms(Tokens, IndexPollTerms),
         CommonHistory0 = !.IndexInfo ^ i_common_history,
         % Use the last search string that was entered in any view, not
         % necessarily the active search string in the index view.
@@ -500,10 +500,16 @@ index_loop(Screen, OnEntry, MaybeUpdateActivity, !.IndexInfo, !IO) :-
         text_entry_full(Screen, "Limit to messages matching: ", History0,
             Initial, Completion, FirstTime, Return, !IO),
         (
-            Return = yes(LimitString),
-            add_history_nodup(LimitString, History0, History),
-            !IndexInfo ^ i_common_history ^ ch_limit_history := History,
-            search_new_limit_string(Screen, LimitString, no, !IndexInfo, !IO)
+            Return = yes(LimitString0),
+            LimitString = string.strip(LimitString0),
+            ( LimitString = "" ->
+                update_message(Screen, clear_message, !IO)
+            ;
+                add_history_nodup(LimitString, History0, History),
+                !IndexInfo ^ i_common_history ^ ch_limit_history := History,
+                search_new_limit_string(Screen, LimitString, no,
+                    !IndexInfo, !IO)
+            )
         ;
             Return = no,
             update_message(Screen, clear_message, !IO)
@@ -888,7 +894,7 @@ key_binding_char('$', mark_spam).
 key_binding_char('+', prompt_tag("+")).
 key_binding_char('-', prompt_tag("-")).
 key_binding_char('t', toggle_select).
-key_binding_char('A', select_all).
+key_binding_char('\x01\', select_all). % ^A
 key_binding_char('T', unselect_all).
 key_binding_char('''', bulk_tag(clear_selection)).
 key_binding_char('"', bulk_tag(keep_selection)).
@@ -1470,8 +1476,8 @@ toggle_select(NumRows, MessageUpdate, !Info) :-
         MessageUpdate = set_warning("No thread.")
     ).
 
-:- pred select_all(message_update::out, index_info::in, index_info::out) is
-    det.
+:- pred select_all(message_update::out, index_info::in, index_info::out)
+    is det.
 
 select_all(MessageUpdate, !Info) :-
     Scrollable0 = !.Info ^ i_scrollable,
@@ -1479,7 +1485,7 @@ select_all(MessageUpdate, !Info) :-
     !Info ^ i_scrollable := Scrollable,
     MessageUpdate = set_info("Selected all threads.").
 
-:- pred select_line(index_line::in, index_line::out) is det. 
+:- pred select_line(index_line::in, index_line::out) is det.
 
 select_line(!Line) :-
     !Line ^ i_selected := selected.
@@ -2035,7 +2041,7 @@ sched_poll(Time, !Info, !IO) :-
     get_notmuch_command(Config, Notmuch),
     Tokens = !.Info ^ i_search_tokens,
     SearchTime = !.Info ^ i_search_time,
-    index_poll_terms(Tokens, IndexPollTerms, !IO),
+    index_poll_terms(Tokens, IndexPollTerms),
     % Could use notmuch count --batch
     Args =
         ["count", "--"] ++
@@ -2045,10 +2051,9 @@ sched_poll(Time, !Info, !IO) :-
     push_lowprio_async(Op, _Pushed, !IO),
     !Info ^ i_next_poll_time := next_poll_time(Config, Time).
 
-:- pred index_poll_terms(list(token), list(string), io, io).
-:- mode index_poll_terms(in, out, di, uo) is det.
+:- pred index_poll_terms(list(token)::in, list(string)::out) is det.
 
-index_poll_terms(Tokens, IndexPollTerms, !IO) :-
+index_poll_terms(Tokens, IndexPollTerms) :-
     tokens_to_search_terms(Tokens, SearchTerms),
     IndexPollTerms = ["(", SearchTerms, ")", "AND", "tag:unread"].
 
